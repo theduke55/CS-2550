@@ -1,0 +1,64 @@
+/* 1. List the first name, last name and phone number for all students that 
+registered on 2/13/2007. Arrange the list in order of last name and first name. */
+SELECT first_name, last_name, phone
+FROM student
+WHERE To_Char(registration_date, 'MM/DD/YYYY') = '02/13/2007'
+ORDER BY last_name, first_name;
+
+/* 2. List course number, section ID and start date for all sections located in L509. 
+Arrange by start date */
+SELECT course_no, section_id, start_date_time
+FROM section
+WHERE location = 'L509'
+ORDER BY start_date_time;
+
+/* 3. List the course number, section ID, start date, instructor ID and capacity 
+for all courses with a start date in July 2007. Arrange the list by start date and course number. */
+SELECT course_no, section_id, start_date_time, instructor_id, capacity
+FROM section
+WHERE To_Char(start_date_time, 'Month YYYY') = 'July      2007'
+ORDER BY start_date_time, course_no;
+
+/* 4. List Student ID, Section ID and final grade for all students who have a 
+final grade and enrolled in January 2007. */
+SELECT student_id, section_id, final_grade
+FROM enrollment
+WHERE To_Char(enroll_date, 'Mon YYYY') = 'Jan 2007'
+AND final_grade IS NOT NULL; 
+
+/* 5. Create a query using the Oracle Dual Table that returns the date of the end
+of the semester for courses that begin on January 11, 2016. The semester is 109 days long. */
+SELECT To_Date('Jan 11 2016', 'Mon DD YYYY') + 109 AS semester_end_date
+FROM dual;
+
+/* 6. Provide a list of course numbers and locations for sections being taught in the even numbered rooms located in building L. */
+SELECT course_no, location
+FROM section
+WHERE SUBSTR(location, 4, 4) IN ('0', '2', '4', '6', '8')
+AND SUBSTR(location, 1, 1) = 'L';
+
+/* 7. Provide a list of Students in zip code 11368 that registered 3 or more days after their student record was created. */
+SELECT last_name, first_name
+FROM student
+WHERE zip = '11368'
+AND registration_date >= 3 + created_date;
+
+/* 8. Create a list of student names along with the number of years since they registered 
+(round to 2 decimal places) for those students from area code 212. Sort the list on the number 
+of years from highest to lowest. Note that your years may not exactly match my numbers depending 
+on when you ran your query compared to when I ran mine. */
+SELECT first_name, last_name, To_Char(Months_Between(SYSDATE, registration_date)/12, '99.99') AS "Years"
+FROM student
+WHERE SUBSTR(phone, 1, 3) = '212'
+ORDER BY "Years" DESC;
+
+/* 9. Create a list of starting times for all course sections. Eliminate duplicates. */
+SELECT DISTINCT To_Char(start_date_time, 'HH:MI') AS "START"
+FROM section
+ORDER BY "START";
+
+/* 10. List the Student ID, Section ID and time enrolled for all students who enrolled at 10:19am. Arrange the list by student ID. */
+SELECT student_id, section_id, To_Char(enroll_date, 'HH:MI AM') AS enroll_time
+FROM enrollment
+WHERE To_Char(enroll_date, 'HH:MI AM') = '10:19 AM'
+ORDER BY student_id;
