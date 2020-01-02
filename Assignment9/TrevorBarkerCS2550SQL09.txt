@@ -1,0 +1,72 @@
+/* 1. List the student ID, name and employer of the student that has enrolled the most times.  
+Arrange the list in alphabetical order of last name then first name. */
+SELECT s.student_id, s.last_name, s.first_name, s.employer
+FROM student s INNER JOIN enrollment e
+ON s.student_id = e.student_id
+GROUP BY s.student_id, s.last_name, s.first_name, s.employer
+HAVING COUNT(*) = 
+    (SELECT MAX(enroll_num)
+    FROM 
+        (SELECT s.student_id, COUNT(*) AS enroll_num
+        FROM student s INNER JOIN enrollment e
+        ON s.student_id = e.student_id
+        GROUP BY s.student_id))
+ORDER BY s.last_name;
+
+/* 2. List zip code, the first and last name and phone number of instructors who teach students that live in same zipcode as their instructor  
+(the instructor must teach them, not just live in the same zipcode).  Arrange the list by first name. */
+SELECT i.zip, i.first_name, i.last_name, i.phone
+FROM student s INNER JOIN enrollment e
+ON s.student_id = e.student_id
+INNER JOIN section t
+ON e.section_id = t.section_id
+INNER JOIN instructor i
+ON t.instructor_id = i.instructor_id
+WHERE s.zip = i.zip
+ORDER BY i.first_name;
+
+/* 3. Provide a list of names and cities of students and instructors that live in zipcode 10025. 
+Identify each person's role as either "Student" or "Instructor". Sort the list by role, last name and first name. */
+SELECT first_name, last_name, city, 'Student' AS role
+FROM student s INNER JOIN zipcode z
+ON s.zip = z.zip
+WHERE s.zip = 10025
+UNION
+SELECT first_name, last_name, city, 'Instructor' AS role
+FROM instructor i INNER JOIN zipcode z
+ON i.zip = z.zip
+WHERE i.zip = 10025
+ORDER BY role, last_name, first_name;
+
+/* 4. Create a query that lists location, number of sections taught in that location and number of students enrolled in sections at that location. Sort by location. */
+SELECT T1.location, T1.num_sections, T2.num_enrolled
+FROM
+    (SELECT location, COUNT(*) AS num_sections
+    FROM section
+    GROUP BY location) T1
+INNER JOIN
+    (SELECT location, COUNT(*) AS num_enrolled
+    FROM section s INNER JOIN enrollment e
+    ON s.section_id = e.section_id
+    GROUP BY location)T2
+ON T1.location = T2.location
+ORDER BY location;
+
+/* 5. Create a query that shows all of the individual grades for student ID 139 in section 95 and also the average of those grades. 
+The individual grades should come first with the average at the bottom. List the grade type code and numeric grade. 
+The average row should have a caption of, "Average for student 139 is". */
+SELECT g.grade_type_code, g.numeric_grade
+FROM grade g INNER JOIN enrollment e
+ON g.student_id = e.student_id
+AND g.section_id = e.section_id
+INNER JOIN section t
+ON e.section_id = t.section_id
+WHERE g.student_id = 139
+AND g.section_id = 95
+UNION ALL
+SELECT 'Average for student 139 is ', AVG(numeric_grade)
+FROM grade
+WHERE student_id = 139
+AND section_id = 95
+GROUP BY 'Average for student 139 is '
+ORDER BY grade_type_code DESC;
