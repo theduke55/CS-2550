@@ -1,0 +1,111 @@
+/* 1.   Write a statement that displays the first and last name of the students that was the last to register for classes. */
+SELECT first_name, last_name
+FROM student
+WHERE registration_date =
+    (SELECT MAX(registration_date)
+    FROM student);
+    
+/* 2. Show the description, section number, capacity and cost of the sections with the lowest course cost and a capacity equal to or lower than the average capacity. */
+SELECT c.description, t.section_no, c.cost, t.capacity
+FROM course c INNER JOIN section t
+ON c.course_no = t.course_no
+WHERE c.cost =
+  (SELECT MIN(cost)
+   FROM
+        (SELECT c.cost AS cost
+        FROM course c INNER JOIN section t
+        ON c.course_no = t.course_no))
+AND t.capacity <=
+  (SELECT AVG(capacity)
+   FROM
+        (SELECT t.capacity AS capacity
+        FROM course c INNER JOIN section t
+        ON c.course_no = t.course_no));
+        
+/* 3. Select the course number and total capacity for each course. Show only those courses with a total capacity less than the average capacity of all sections. */
+SELECT c.course_no, t.capacity
+FROM course c INNER JOIN section t
+ON c.course_no = t.course_no
+WHERE c.course_no IN
+    (SELECT c.course_no
+    FROM course c INNER JOIN section t
+    ON c.course_no = t.course_no
+    GROUP BY c.course_no
+    HAVING SUM(capacity) <
+        (SELECT AVG(capacity)
+        FROM section));
+
+/* 4. Choose most ambitious students by showing the student ID for those students enrolled in the most sections. */
+SELECT s.student_id, COUNT(*) AS most_sections
+FROM student s INNER JOIN enrollment e
+ON s.student_id = e.student_id
+INNER JOIN section t
+ON t.section_id = e.section_id
+GROUP BY s.student_id
+HAVING COUNT(*) =
+    (SELECT MAX(enrolled_sections)
+    FROM
+        (SELECT s.student_id, COUNT(*) AS enrolled_sections
+        FROM student s INNER JOIN enrollment e
+        ON s.student_id = e.student_id
+        INNER JOIN section t
+        ON t.section_id = e.section_id
+        GROUP BY s.student_id));
+        
+/* 5. Select the Student ID and section ID of enrolled students living in Zip Code 11373. */
+SELECT s.student_id, e.section_id
+FROM enrollment e INNER JOIN student s
+ON e.student_id = s.student_id
+INNER JOIN zipcode z
+ON s.zip = z.zip
+WHERE z.zip = 11373;
+
+/* 6. Display the course number and the course description of courses taught by Marilyn Frantzen. */
+SELECT DISTINCT c.course_no, c.description
+FROM course c INNER JOIN section t
+ON c.course_no = t.course_no
+INNER JOIN instructor i 
+ON t.instructor_id = i.instructor_id
+WHERE i.first_name = 'Marilyn'
+AND i.last_name = 'Frantzen';
+
+/* 7. Show the first and last names of students who are not enrolled in any class. */
+SELECT s.first_name, s.last_name
+FROM student s 
+WHERE s.student_id NOT IN 
+    (SELECT DISTINCT student_id
+    FROM enrollment);
+    
+/* 8. Determine the name, course description, and section ID of the students who had the lowest Project (PJ) grade from all courses. */
+SELECT s.first_name, c.description, t.section_id
+FROM grade g INNER JOIN enrollment e
+ON g.student_id = e.student_id
+AND g.section_id = e.section_id
+INNER JOIN student s
+ON e.student_id = s.student_id
+INNER JOIN section t
+ON e.section_id = t.section_id
+INNER JOIN course c
+ON t.course_no = c.course_no
+WHERE g.numeric_grade =
+    (SELECT MIN(numeric_grade)
+    FROM grade
+    WHERE grade_type_code = 'PJ')
+AND g.grade_type_code = 'PJ';
+
+/* 9. Select the sections that are full by comparing capacity to the number enrolled. Show the number enrolled, the section capacity and the section ID. */
+SELECT enrolled, t.section_id, t.capacity
+FROM section t INNER JOIN 
+    (SELECT e.section_id, COUNT(*) AS enrolled
+    FROM section t INNER JOIN enrollment e
+    ON t.section_id = e.section_id
+    GROUP BY e.section_id) T1
+ON T1.section_id = t.section_id
+WHERE t.capacity <= enrolled;
+
+/* 10. Show the course number, description and cost of the cheapest courses. */
+SELECT course_no, description, cost
+FROM course
+WHERE cost = 
+    (SELECT MIN(cost)
+    FROM course);
